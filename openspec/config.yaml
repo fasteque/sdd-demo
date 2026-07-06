@@ -2,19 +2,17 @@ schema: spec-driven
 
 # Project context (optional)
 # This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+context: |
+  Tech stack: Kotlin, Spring Boot 4.1, Spring Data MongoDB, Gradle
+  API conventions: RESTful endpoints, JSON request/response bodies
+  Style: idiomatic Kotlin, constructor injection, no unnecessary abstractions
+  This is a personal learning sandbox to experiment with spec-driven development — not a production system.
 
 # Per-artifact rules (optional)
 # Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+rules:
+  proposal:
+    - Keep proposals concise and readable by a non-developer (Product Owner)
+    - Always include a "Non-goals" section
+  tasks:
+    - Break tasks into small, independently testable chunks
