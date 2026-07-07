@@ -38,3 +38,6 @@ out/
 
 ### Kotlin ###
 .kotlin
+
+### Compound Engineering ###
+.compound-engineering/*.local.yaml
