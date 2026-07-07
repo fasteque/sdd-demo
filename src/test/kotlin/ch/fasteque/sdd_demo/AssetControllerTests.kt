@@ -7,6 +7,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
@@ -72,5 +73,25 @@ class AssetControllerTests {
 		val savedAssets = assetRepository.findAll()
 		assertEquals(1, savedAssets.size)
 		assertTrue(savedAssets[0].tags.isEmpty())
+	}
+
+	@Test
+	fun `returns asset by id`() {
+		val saved = assetRepository.save(
+			Asset(name = "Cover Photo", type = "image", tags = listOf("hero"), status = "draft")
+		)
+
+		mockMvc.perform(get("/assets/${saved.id}"))
+			.andExpect(status().isOk)
+			.andExpect(jsonPath("$.id").value(saved.id))
+			.andExpect(jsonPath("$.name").value("Cover Photo"))
+			.andExpect(jsonPath("$.type").value("image"))
+			.andExpect(jsonPath("$.status").value("draft"))
+	}
+
+	@Test
+	fun `returns 404 when asset id does not exist`() {
+		mockMvc.perform(get("/assets/does-not-exist"))
+			.andExpect(status().isNotFound)
 	}
 }
