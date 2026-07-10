@@ -19,7 +19,7 @@ an OpenSpec change folder — treat `tasks.md` as the plan.
 3. `/ce-work` — implements against that plan, checking off tasks.md as it goes
 4. `/ce-code-review` — parallel specialist review of the implementation
 5. `/opsx:apply` if not already applied by ce-work, to keep OpenSpec's own tracking in sync
-6. `/ce-compound` — write down what was learned into docs/solutions/
+6. `/ce-compound` — write down what was learned into `docs/solutions/`, organized by category with YAML frontmatter (`module`, `tags`, `problem_type`) — relevant to check when implementing or debugging in a documented area
 7. `/opsx:archive` — file the OpenSpec change, update the living spec
 
 ## Tech stack
