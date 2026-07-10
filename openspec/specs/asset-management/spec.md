@@ -2,7 +2,8 @@
 
 ## Purpose
 
-TBD - capability for creating and managing assets in the system.
+Manages the lifecycle of assets in the system — creating new assets and retrieving them individually.
+Assets are the core domain entity this API exposes, each identified by a system-generated id and described by a name, type, tags, and status.
 
 ## Requirements
 
