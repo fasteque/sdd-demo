@@ -94,4 +94,57 @@ class AssetControllerTests {
 		mockMvc.perform(get("/assets/does-not-exist"))
 			.andExpect(status().isNotFound)
 	}
+
+	@Test
+	fun `lists assets with default pagination`() {
+		assetRepository.save(Asset(name = "Asset 1", type = "image", tags = emptyList(), status = "draft"))
+		assetRepository.save(Asset(name = "Asset 2", type = "image", tags = emptyList(), status = "draft"))
+
+		mockMvc.perform(get("/assets"))
+			.andExpect(status().isOk)
+			.andExpect(jsonPath("$.content.length()").value(2))
+			.andExpect(jsonPath("$.page").value(0))
+			.andExpect(jsonPath("$.size").value(20))
+			.andExpect(jsonPath("$.totalElements").value(2))
+			.andExpect(jsonPath("$.totalPages").value(1))
+	}
+
+	@Test
+	fun `lists assets with explicit page and size`() {
+		for (i in 1..6) {
+			assetRepository.save(Asset(name = "Asset $i", type = "image", tags = emptyList(), status = "draft"))
+		}
+
+		mockMvc.perform(get("/assets?page=1&size=5"))
+			.andExpect(status().isOk)
+			.andExpect(jsonPath("$.content.length()").value(1))
+			.andExpect(jsonPath("$.page").value(1))
+			.andExpect(jsonPath("$.size").value(5))
+			.andExpect(jsonPath("$.totalElements").value(6))
+			.andExpect(jsonPath("$.totalPages").value(2))
+	}
+
+	@Test
+	fun `returns empty content when page is beyond available data`() {
+		assetRepository.save(Asset(name = "Asset 1", type = "image", tags = emptyList(), status = "draft"))
+
+		mockMvc.perform(get("/assets?page=5"))
+			.andExpect(status().isOk)
+			.andExpect(jsonPath("$.content.length()").value(0))
+			.andExpect(jsonPath("$.page").value(5))
+			.andExpect(jsonPath("$.totalElements").value(1))
+			.andExpect(jsonPath("$.totalPages").value(1))
+	}
+
+	@Test
+	fun `rejects negative page`() {
+		mockMvc.perform(get("/assets?page=-1"))
+			.andExpect(status().isBadRequest)
+	}
+
+	@Test
+	fun `rejects size less than 1`() {
+		mockMvc.perform(get("/assets?size=0"))
+			.andExpect(status().isBadRequest)
+	}
 }
