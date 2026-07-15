@@ -32,11 +32,12 @@ here for future reference, not yet used in this repo.
 3. `/ce-plan` — reads the existing `openspec/changes/<change-name>/tasks.md`, confirms/refines execution approach
 4. `/ce-work` — implements against that plan, checking off `tasks.md` as it goes
 5. `/ce-code-review` — parallel specialist review of the implementation
-6. `/opsx:verify` — checks the implementation against the original spec (CRITICAL / WARNING / SUGGESTION report)
-7. `/opsx:apply` if not already applied by `ce-work`, to keep OpenSpec's own tracking in sync
-8. `/ce-compound` — write down what was learned into `docs/solutions/`, organized by category with YAML frontmatter (`module`, `tags`, `problem_type`) — relevant to check when implementing or debugging in a documented area
-9. Commit and push manually (review the diff yourself; `/ce-commit-push-pr` exists as a one-shot alternative but isn't used here yet — evaluate separately before adopting, since it also opens a PR automatically)
-10. `/opsx:archive` — file the OpenSpec change, update the living spec
+6. `/opsx:apply` if not already applied by `ce-work`, to keep OpenSpec's own tracking in sync
+7. `/ce-compound` — write down what was learned into `docs/solutions/`, organized by category with YAML frontmatter (`module`, `tags`, `problem_type`) — relevant to check when implementing or debugging in a documented area
+8. Commit and push manually (review the diff yourself; `/ce-commit-push-pr` exists as a one-shot alternative but isn't used here yet — evaluate separately before adopting, since it also opens a PR automatically)
+9. `/opsx:sync` then `/opsx:archive` — sync delta specs into the living spec, then file the OpenSpec change
+
+**Note:** `/opsx:verify` does not exist among this repo's installed OpenSpec skills (only `propose`/`apply`/`archive`/`explore`/`sync` are present) — do not attempt to invoke it. `/ce-code-review` plus `/opsx:apply`'s task-completion check are this workflow's substitute for spec-conformance verification.
 
 **If scope changes mid-execution:** update `tasks.md` first, then re-run `/ce-plan` before continuing — don't let `ce-work` proceed against a stale plan.
 
@@ -46,7 +47,7 @@ Two frameworks collaborate here. Each owns a distinct layer — don't cross it.
 
 | Layer              | Owner    | Commands                                         | Produces                                                                |
 |--------------------|----------|--------------------------------------------------|-------------------------------------------------------------------------|
-| Spec artifacts     | OpenSpec | `/opsx:propose`, `/opsx:verify`, `/opsx:archive` | `proposal.md`, `design.md`, `tasks.md`, archived change                 |
+| Spec artifacts     | OpenSpec | `/opsx:propose`, `/opsx:sync`, `/opsx:archive`   | `proposal.md`, `design.md`, `tasks.md`, archived change                 |
 | Execution planning | CE       | `/ce-plan`                                       | Refined execution plan (reads OpenSpec's `tasks.md`, never replaces it) |
 | Implementation     | CE       | `/ce-work`                                       | Code changes; marks tasks `[x]` in OpenSpec's `tasks.md`                |
 | Code review        | CE       | `/ce-code-review`                                | Review findings                                                         |
