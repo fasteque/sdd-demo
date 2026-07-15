@@ -63,4 +63,5 @@ Two frameworks collaborate here. Each owns a distinct layer — don't cross it.
 - Prefer clarity to speed
 
 ## Tech stack
-Kotlin, Spring Boot 4.1, Spring Data MongoDB, Gradle, tests via JUnit 5 + MockMvc.
+
+@docs/tech-stack.md
