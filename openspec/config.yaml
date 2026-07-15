@@ -15,5 +15,7 @@ rules:
   design:
     - Before introducing a new pattern, check whether an existing one (from prior changes) already solves it, and reuse it unless there's a stated reason not to
     - Call out any deviation from previous decisions in openspec/specs/ explicitly, with rationale
+    - For any change touching an HTTP endpoint, treat openapi/openapi.yaml as the authoritative wire contract — design.md should reference the relevant path/operation, not restate request/response field shapes already captured there
   tasks:
     - Break tasks into small, independently testable chunks
+    - For any change that adds or modifies an HTTP endpoint, the first tasks must be, in order: (1) update openapi/openapi.yaml for the affected path(s), (2) run ./gradlew openApiGenerate to regenerate server interfaces/models, (3) implement/update the controller against the regenerated interface

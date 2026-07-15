@@ -2,6 +2,7 @@
 
 Kotlin, Spring Boot 4.1, Spring Data MongoDB, Gradle
 API conventions: RESTful endpoints, JSON request/response bodies
+API contracts: HTTP endpoints are OpenAPI-spec-first. `openapi/openapi.yaml` is authoritative for wire contracts (request/response shapes, status codes) for the endpoints it covers. Workflow: edit the spec first, run `./gradlew openApiGenerate` to regenerate server interfaces/models (output under `build/generated/openapi`, gitignored — never hand-edited or committed), then implement/update the controller against the generated interface. The implementing class must still carry its own `@RestController` annotation (component-scanning discovers beans via annotations declared on the class itself, not via annotations on implemented interfaces) even though the generated interface also carries `@RestController` (needed separately for correct handler-mapping detection when the bean is wrapped in a dynamic proxy). Hand-declaring request/response DTOs per endpoint (as `AssetController` still does) is being phased out in favor of generated models for OAS-covered endpoints.
 Style: idiomatic Kotlin, constructor injection, no unnecessary abstractions
 Testing: JUnit 5 + Spring Boot Test + MockMvc, tests co-located under src/test/kotlin mirroring main package structure
 Error responses: use ResponseStatusException with a clear reason message for 4xx errors; no custom error body shape yet (revisit if inconsistency becomes a problem)

@@ -1,11 +1,13 @@
 package ch.fasteque.sdd_demo
 
-import org.springframework.web.bind.annotation.GetMapping
+import ch.fasteque.sdd_demo.generated.api.HealthApi
+import ch.fasteque.sdd_demo.generated.model.HealthStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-class HealthController {
+class HealthController : HealthApi {
 
-	@GetMapping("/health")
-	fun health(): Map<String, String> = mapOf("status" to "UP")
+	override fun getHealth(): ResponseEntity<HealthStatus> =
+		ResponseEntity.ok(HealthStatus(status = "UP"))
 }

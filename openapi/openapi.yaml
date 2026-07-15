@@ -1,0 +1,33 @@
+openapi: 3.0.3
+info:
+  title: sdd-demo API
+  version: 0.0.1
+  description: >
+    OpenAPI contract for sdd-demo HTTP endpoints. This file is authoritative
+    for wire contracts (request/response shapes, status codes) for the
+    endpoints it covers — edit it first, then regenerate server interfaces
+    via `./gradlew openApiGenerate` before implementing controller changes.
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      tags:
+        - health
+      summary: Liveness check
+      responses:
+        "200":
+          description: Service is running
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          example: UP

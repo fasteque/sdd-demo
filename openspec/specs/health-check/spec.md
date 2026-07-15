@@ -11,4 +11,4 @@ The system SHALL provide a `GET /health` endpoint that returns a 200 status with
 
 #### Scenario: Service is running
 - **WHEN** a client sends `GET /health`
-- **THEN** the system returns a 200 status with a JSON body of `{"status": "UP"}`
+- **THEN** the system returns a 200 status with a body matching the `HealthStatus` schema defined in `openapi/openapi.yaml` (authoritative for the exact wire shape)

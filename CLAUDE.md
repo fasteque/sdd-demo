@@ -43,15 +43,16 @@ here for future reference, not yet used in this repo.
 
 ## Framework boundaries
 
-Two frameworks collaborate here. Each owns a distinct layer — don't cross it.
+Two AI frameworks and one build-time toolchain collaborate here. Each owns a distinct layer — don't cross it.
 
-| Layer              | Owner    | Commands                                         | Produces                                                                |
-|--------------------|----------|--------------------------------------------------|-------------------------------------------------------------------------|
-| Spec artifacts     | OpenSpec | `/opsx:propose`, `/opsx:sync`, `/opsx:archive`   | `proposal.md`, `design.md`, `tasks.md`, archived change                 |
-| Execution planning | CE       | `/ce-plan`                                       | Refined execution plan (reads OpenSpec's `tasks.md`, never replaces it) |
-| Implementation     | CE       | `/ce-work`                                       | Code changes; marks tasks `[x]` in OpenSpec's `tasks.md`                |
-| Code review        | CE       | `/ce-code-review`                                | Review findings                                                         |
-| Knowledge capture  | CE       | `/ce-compound`                                   | `docs/solutions/`                                                       |
+| Layer                 | Owner             | Commands                                       | Produces                                                                                                            |
+|-----------------------|-------------------|------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
+| Spec artifacts        | OpenSpec          | `/opsx:propose`, `/opsx:sync`, `/opsx:archive` | `proposal.md`, `design.md`, `tasks.md`, archived change                                                             |
+| Execution planning    | CE                | `/ce-plan`                                     | Refined execution plan (reads OpenSpec's `tasks.md`, never replaces it)                                             |
+| Implementation        | CE                | `/ce-work`                                     | Code changes; marks tasks `[x]` in OpenSpec's `tasks.md`                                                            |
+| Code review           | CE                | `/ce-code-review`                              | Review findings                                                                                                     |
+| Knowledge capture     | CE                | `/ce-compound`                                 | `docs/solutions/`                                                                                                   |
+| Wire contracts (HTTP) | OpenAPI Generator | `./gradlew openApiGenerate`                    | Generated Kotlin server interfaces + models under `build/generated/openapi` (gitignored, regenerated at build time) |
 
 **Artifact path contract:** OpenSpec writes to `openspec/changes/<change-name>/`. CE commands (`/ce-plan`, `/ce-work`) MUST read from this path. Never duplicate or shadow OpenSpec artifacts.
 
@@ -62,6 +63,8 @@ Two frameworks collaborate here. Each owns a distinct layer — don't cross it.
 - Treat `tasks.md` as the executable ground truth during execution
 - Write/update tests for changed behavior before considering work done
 - Prefer clarity to speed
+- For HTTP endpoints covered by `openapi/openapi.yaml`, the spec is authoritative for wire contracts — edit it before writing/changing controller code, then regenerate (`./gradlew openApiGenerate`) before implementing
+- Don't hand-declare request/response DTOs for OAS-covered endpoints — implement the generated interface/model instead (see `docs/tech-stack.md`)
 
 ## Tech stack
 
