@@ -21,6 +21,75 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /assets:
+    post:
+      operationId: createAsset
+      tags:
+        - assets
+      summary: Create an asset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAssetRequest"
+      responses:
+        "201":
+          description: Asset created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Asset"
+        "400":
+          description: Invalid request
+    get:
+      operationId: listAssets
+      tags:
+        - assets
+      summary: List assets with pagination
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 20
+      responses:
+        "200":
+          description: Paginated list of assets
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssetPage"
+        "400":
+          description: Invalid page or size
+  /assets/{id}:
+    get:
+      operationId: getAsset
+      tags:
+        - assets
+      summary: Retrieve an asset by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Asset found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Asset"
+        "404":
+          description: Asset not found
 components:
   schemas:
     HealthStatus:
@@ -31,3 +100,67 @@ components:
         status:
           type: string
           example: UP
+    Asset:
+      type: object
+      required:
+        - id
+        - name
+        - type
+        - tags
+        - status
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+    CreateAssetRequest:
+      type: object
+      required:
+        - name
+        - type
+        - status
+      properties:
+        name:
+          type: string
+          minLength: 1
+        type:
+          type: string
+          minLength: 1
+        tags:
+          type: array
+          nullable: true
+          items:
+            type: string
+        status:
+          type: string
+          minLength: 1
+    AssetPage:
+      type: object
+      required:
+        - content
+        - page
+        - size
+        - totalElements
+        - totalPages
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/Asset"
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
