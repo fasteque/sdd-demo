@@ -25,7 +25,17 @@ here for future reference, not yet used in this repo.
 
 **Escalation rule:** if scope grows mid-execution beyond the current tier, stop, re-tier, and restart under the correct process rather than continuing under the wrong one.
 
-## Workflow for this project (Tier 2)
+### Tier 1 — Hotfix
+
+No OpenSpec artifacts. Skip `/opsx:propose` entirely — the point of Tier 1 is that the fix is small and obvious enough not to need a reviewed plan.
+
+1. If it's a genuine bug: `/ce-debug` — investigates and fixes the root cause directly
+2. If it's not a bug (typo, config tweak, dependency bump): just make the edit directly, no command needed
+3. `/ce-code-review` — still required, even for a one-line change
+4. `/ce-compound` — optional, but recommended if the bug was non-obvious (i.e., if the root cause taught you something worth not re-learning later)
+5. Commit and push manually
+
+### Tier 2 — Standard Feature
 
 1. `/opsx:propose "<feature description>"` — human reviews `proposal.md`, `design.md`, `tasks.md`
 2. *(optional)* `/ce-brainstorm` — only if the approach is genuinely unclear; skip when the OpenSpec proposal is already clear
@@ -34,12 +44,17 @@ here for future reference, not yet used in this repo.
 5. `/ce-code-review` — parallel specialist review of the implementation
 6. `/opsx:apply` if not already applied by `ce-work`, to keep OpenSpec's own tracking in sync
 7. `/ce-compound` — write down what was learned into `docs/solutions/`, organized by category with YAML frontmatter (`module`, `tags`, `problem_type`) — relevant to check when implementing or debugging in a documented area
-8. Commit and push manually (review the diff yourself; `/ce-commit-push-pr` exists as a one-shot alternative but isn't used here yet — evaluate separately before adopting, since it also opens a PR automatically)
-9. `/opsx:sync` then `/opsx:archive` — sync delta specs into the living spec, then file the OpenSpec change
+8. `/opsx:sync` — merge the delta spec into the living spec
+9. `/opsx:archive` — file the OpenSpec change
+10. Commit and push manually (this final commit captures the implementation, the compound learnings, the synced spec, and the archived change together; `/ce-commit-push-pr` exists as a one-shot alternative but isn't used here yet — evaluate separately before adopting, since it also opens a PR automatically)
 
-**Note:** `/opsx:verify` does not exist among this repo's installed OpenSpec skills (only `propose`/`apply`/`archive`/`explore`/`sync` are present) — do not attempt to invoke it. `/ce-code-review` plus `/opsx:apply`'s task-completion check are this workflow's substitute for spec-conformance verification.
+### Tier 3 — Major Feature
 
-**If scope changes mid-execution:** update `tasks.md` first, then re-run `/ce-plan` before continuing — don't let `ce-work` proceed against a stale plan.
+Triggers: architecture changes, anything spanning multiple repos/services, or scope that's genuinely unclear at the start.
+
+1. `/ce-strategy` — establishes or updates `STRATEGY.md` (problem, target persona, success metrics). Must exist and be complete before any spec work begins.
+2. `/ce-ideate` — explore and rank multiple approaches before committing to one, when the right approach genuinely isn't obvious yet
+3. Then: **follow the Tier 2 workflow above exactly, steps 1–10, with one addition** — insert a dedicated `/security-review` pass immediately after step 5 (`/ce-code-review`). This is a native Claude Code skill, not part of OpenSpec or CE, run as a second, separate pass rather than folded into the regular review step.
 
 ## Framework boundaries
 
@@ -61,6 +76,7 @@ Two AI frameworks and one build-time toolchain collaborate here. Each owns a dis
 - Never skip `/ce-code-review`
 - Never skip `/ce-compound` for feature work
 - Treat `tasks.md` as the executable ground truth during execution
+- **If scope changes mid-execution:** update `tasks.md` first, then re-run `/ce-plan` before continuing — don't let `ce-work` proceed against a stale plan.
 - Write/update tests for changed behavior before considering work done
 - Prefer clarity to speed
 - For HTTP endpoints covered by `openapi/openapi.yaml`, the spec is authoritative for wire contracts — edit it before writing/changing controller code, then regenerate (`./gradlew openApiGenerate`) before implementing
