@@ -14,14 +14,13 @@ an OpenSpec change folder — treat `tasks.md` as the plan.
 
 ## Tiers
 
-This project currently only exercises **Tier 2**. Tier 1 and Tier 3 are documented
-here for future reference, not yet used in this repo.
+**Identify the tier before doing anything else.**
 
-| Tier                                                     | When                                           | Process                                                                                                                                                                                |
-|----------------------------------------------------------|------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Tier 1 — Hotfix**                                      | Bug, typo, config change with obvious scope    | `/ce-debug → /ce-code-review`. No spec artifacts required. `/ce-compound` optional but recommended for non-trivial bugs.                                                               |
-| **Tier 2 — Standard Feature** *(this project's default)* | Clear requirements, fits a normal work session | See workflow below.                                                                                                                                                                    |
-| **Tier 3 — Major Feature**                               | Architecture change, unclear scope             | `/ce-strategy` and/or `/ce-ideate` first to ground the work in strategy (`STRATEGY.md`), then enter the Tier 2 loop, plus a dedicated `/security-review` pass after `/ce-code-review`. |
+| Tier                                                | When                                           | Process             |
+|-----------------------------------------------------|------------------------------------------------|---------------------|
+| **Tier 1 — Hotfix**                                 | Bug, typo, config change with obvious scope    | See workflow below. |
+| **Tier 2 — Standard Feature** *(project's default)* | Clear requirements, fits a normal work session | See workflow below. |
+| **Tier 3 — Major Feature**                          | Architecture change, unclear scope             | See workflow below. |
 
 **Escalation rule:** if scope grows mid-execution beyond the current tier, stop, re-tier, and restart under the correct process rather than continuing under the wrong one.
 
@@ -58,7 +57,7 @@ Triggers: architecture changes, anything spanning multiple repos/services, or sc
 
 ## Framework boundaries
 
-Two AI frameworks and one build-time toolchain collaborate here. Each owns a distinct layer — don't cross it.
+Two AI frameworks and one build-time toolchain collaborate here. This isn't the full command list (see **Tiers** above for that) — it's specifically the layers where two tools could collide over the same artifact. Each layer has exactly one owner — don't cross it.
 
 | Layer                 | Owner             | Commands                                       | Produces                                                                                                            |
 |-----------------------|-------------------|------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|

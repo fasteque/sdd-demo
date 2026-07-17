@@ -25,7 +25,4 @@ The following `groupId:artifactId` combinations are pre-approved and can be adde
 - `org.jetbrains.kotlin:kotlin-test-junit5`
 - `org.junit.platform:junit-platform-launcher`
 
-**Any dependency not on this list requires explicit confirmation before being added** — propose it in the change's
-`design.md` first (what it's for, why an existing approved dependency or plain Kotlin/JVM stdlib code can't do the job),
-and wait for approval before adding it to `build.gradle.kts`. This applies even for a single method's worth of
-functionality — prefer a few lines of hand-written code over a new dependency for narrow, one-off needs.
+**Any dependency not on this list requires explicit confirmation before being added** — propose it in the change's `design.md` first (what it's for, why an existing approved dependency or plain Kotlin/JVM stdlib code can't do the job), and wait for approval before adding it to `build.gradle.kts`. This applies even for a single method's worth of functionality — prefer a few lines of hand-written code over a new dependency for narrow, one-off needs.
