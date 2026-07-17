@@ -81,6 +81,7 @@ Two AI frameworks and one build-time toolchain collaborate here. Each owns a dis
 - Prefer clarity to speed
 - For HTTP endpoints covered by `openapi/openapi.yaml`, the spec is authoritative for wire contracts — edit it before writing/changing controller code, then regenerate (`./gradlew openApiGenerate`) before implementing
 - Don't hand-declare request/response DTOs for OAS-covered endpoints — implement the generated interface/model instead (see `docs/tech-stack.md`)
+- New dependencies must be on the approved list in `docs/tech-stack.md`; anything else requires explicit confirmation first, proposed with rationale in `design.md` — never add a library for a single narrow use case without asking
 
 ## Tech stack
 
