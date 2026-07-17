@@ -90,6 +90,22 @@ paths:
                 $ref: "#/components/schemas/Asset"
         "404":
           description: Asset not found
+    delete:
+      operationId: deleteAsset
+      tags:
+        - assets
+      summary: Delete an asset by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Asset deleted
+        "404":
+          description: Asset not found
 components:
   schemas:
     HealthStatus:

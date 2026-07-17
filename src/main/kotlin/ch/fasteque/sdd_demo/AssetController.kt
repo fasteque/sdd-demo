@@ -40,6 +40,14 @@ class AssetController(private val assetRepository: AssetRepository) : AssetsApi 
 		return ResponseEntity.ok(asset.toResponse())
 	}
 
+	override fun deleteAsset(id: String): ResponseEntity<Unit> {
+		if (!assetRepository.existsById(id)) {
+			throw ResponseStatusException(HttpStatus.NOT_FOUND, "asset not found")
+		}
+		assetRepository.deleteById(id)
+		return ResponseEntity.noContent().build()
+	}
+
 	override fun listAssets(page: Int, size: Int): ResponseEntity<AssetPage> {
 		val result = assetRepository.findAll(PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "_id")))
 		return ResponseEntity.ok(

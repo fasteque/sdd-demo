@@ -7,6 +7,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
@@ -146,5 +147,23 @@ class AssetControllerTests {
 	fun `rejects size less than 1`() {
 		mockMvc.perform(get("/assets?size=0"))
 			.andExpect(status().isBadRequest)
+	}
+
+	@Test
+	fun `deletes asset and removes it from MongoDB`() {
+		val saved = assetRepository.save(
+			Asset(name = "Cover Photo", type = "image", tags = listOf("hero"), status = "draft")
+		)
+
+		mockMvc.perform(delete("/assets/${saved.id}"))
+			.andExpect(status().isNoContent)
+
+		assertTrue(assetRepository.findById(saved.id!!).isEmpty)
+	}
+
+	@Test
+	fun `returns 404 when deleting an asset id that does not exist`() {
+		mockMvc.perform(delete("/assets/does-not-exist"))
+			.andExpect(status().isNotFound)
 	}
 }

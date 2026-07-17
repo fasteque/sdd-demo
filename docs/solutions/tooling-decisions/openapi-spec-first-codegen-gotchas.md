@@ -1,6 +1,7 @@
 ---
-title: OAS-first codegen with openapi-generator (kotlin-spring) - five gotchas that don't show up until runtime or a real regression
+title: OAS-first codegen with openapi-generator (kotlin-spring) - six gotchas that don't show up until runtime or a real regression
 date: 2026-07-15
+last_updated: 2026-07-17
 category: docs/solutions/tooling-decisions
 module: "API layer / HTTP controllers (Kotlin/Spring Boot codegen via org.openapi.generator)"
 problem_type: tooling_decision
@@ -16,13 +17,13 @@ related_components: [testing_framework, development_workflow]
 tags: [openapi, openapi-generator, kotlin-spring, code-generation, spring-validation, component-scanning, import-aliasing, jackson]
 ---
 
-# OAS-first codegen with openapi-generator (kotlin-spring): five gotchas that don't show up until runtime or a real regression
+# OAS-first codegen with openapi-generator (kotlin-spring): six gotchas that don't show up until runtime or a real regression
 
 ## Context
 
 `sdd-demo` (Kotlin, Spring Boot 4.1, Gradle, MongoDB) switched its HTTP endpoints to an OpenAPI-spec-first (OAS-first) workflow. `openapi/openapi.yaml` is now the contract of record. The `org.openapi.generator` Gradle plugin (`kotlin-spring` generator, `interfaceOnly: true`, `useSpringBoot4: true`, `useJackson3: true`, `useTags: true`) generates server interfaces and models into `build/generated/openapi` (gitignored, regenerated on every build via `compileKotlin.dependsOn("openApiGenerate")`). Controllers now implement the generated interface instead of hand-declaring request/response DTOs.
 
-The migration was done first as a trial on `GET /health`, then as a full migration of `AssetController` (`POST /assets`, `GET /assets/{id}`, `GET /assets`), bringing all four real endpoints in the repo under OAS coverage.
+The migration was done first as a trial on `GET /health`, then as a full migration of `AssetController` (`POST /assets`, `GET /assets/{id}`, `GET /assets`), bringing all four real endpoints in the repo under OAS coverage. A later change added `DELETE /assets/{id}` the same way, bringing the total to five OAS-covered endpoints and surfacing a sixth gotcha (below) around bodyless-response return types.
 
 Several of the problems below are not visible by reading the OAS spec or the generator's plugin config — they only surface by actually reading the generated Kotlin source, by exercising the endpoint with a real integration test (MockMvc against a real Spring context), or, in one case, by empirically deleting code and rerunning the suite to check whether it was still doing anything. Each is a distinct, durable trap worth checking for on any future OAS-first migration in this codebase.
 
@@ -119,6 +120,35 @@ private fun Asset.toResponse(): AssetResponse =
 
 The mapping function was kept in the controller file itself (not split into a dedicated mapper class) since there was only one implementor of this pattern at the time — a deliberate "avoid premature abstraction" call, worth revisiting if a third OAS-migrated controller repeats the same shape.
 
+### Gotcha 6: a bodyless 204 response generates `ResponseEntity<Unit>`, not `ResponseEntity<Void>`
+
+For a path operation whose 2xx response declares no `content:` schema (e.g. a `204` with only a `description`, no response body), the kotlin-spring generator emits `ResponseEntity<Unit>` as the interface method's return type — not `ResponseEntity<Void>`, which is the natural assumption to carry over from plain Java/Spring MVC conventions (where a no-body response is typically typed `ResponseEntity<Void>`).
+
+Confirmed by adding `DELETE /assets/{id}` (204 on success, no `content:` schema; 404 when not found) to `openapi/openapi.yaml`, running `./gradlew openApiGenerate`, and reading the generated interface directly instead of assuming:
+
+```kotlin
+// build/generated/openapi/src/main/kotlin/.../generated/api/AssetsApi.kt
+fun deleteAsset(
+    @PathVariable("id") id: kotlin.String
+): ResponseEntity<Unit> {
+    return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
+}
+```
+
+The controller override must match this signature exactly:
+
+```kotlin
+override fun deleteAsset(id: String): ResponseEntity<Unit> {
+    if (!assetRepository.existsById(id)) {
+        throw ResponseStatusException(HttpStatus.NOT_FOUND, "asset not found")
+    }
+    assetRepository.deleteById(id)
+    return ResponseEntity.noContent().build()
+}
+```
+
+Unlike Gotcha 3 (a silent runtime regression), guessing `ResponseEntity<Void>` here fails loudly: a Kotlin `override` must match the interface's declared return type exactly, so the wrong guess is a compile error, not a passing-but-wrong test. `ResponseEntity.noContent().build()` itself would type-check against either `Unit` or `Void` — it's the override's declared return type that catches the mismatch. Still costs a compile-error detour if the generated interface isn't read first, same as Gotcha 2's field-rename trap.
+
 ## Why This Matters
 
 Each gotcha fails in a way that looks like success until you look closely:
@@ -128,6 +158,7 @@ Each gotcha fails in a way that looks like success until you look closely:
 - Gotcha 3 is the most dangerous: it is a runtime behavior regression with an identical-looking schema, invisible unless a test exercises the exact explicit-`null` case, and it silently narrows the API contract for existing clients that relied on sending `null`.
 - Gotcha 4 doesn't break anything today, but leaves misleading code in the repository: a future maintainer who reads the guard clause will believe the controller is responsible for validation, and may either duplicate the check elsewhere or trust it in a place where the generated validation does NOT apply (e.g. a code path that bypasses the generated interface).
 - Gotcha 5 is a plain compile error, but confusing the first time it's hit — the fix (import aliasing) isn't obvious to anyone unfamiliar with the pattern, and the decision of where mapping code lives compounds across every future OAS-migrated controller.
+- Gotcha 6 is also a plain compile error (loud, unlike Gotcha 3), but the assumption it corrects — "no response body means `ResponseEntity<Void>`" — is a reasonable one carried over from plain Spring MVC, and this generator doesn't follow it. Worth a few seconds reading the generated interface to avoid the detour.
 
 Because `build/generated/openapi` is gitignored and regenerated on every build, none of this is visible from a `git diff` or a code review of committed source alone — the generated code has to be inspected directly, and the runtime behavior has to be tested, to catch these classes of issues.
 
@@ -139,15 +170,17 @@ Because `build/generated/openapi` is gitignored and regenerated on every build, 
 - Any time a generated model's Kotlin property name looks unexpected relative to the OAS field name — check the generated source file directly rather than assuming a 1:1 name mapping.
 - Any time a domain/persistence type and a generated API model share a simple name in the same package — decide up front whether to alias the import or rename one of the types, and note whether extracting a dedicated mapper is warranted once more than one controller repeats the shape.
 - After running `./gradlew openApiGenerate`, before writing controller code against the generated types — read the generated model/interface source at least once for the endpoint being implemented.
+- Any time an OAS operation declares a 2xx response with no `content:` schema (a `204`, or a `200`/`201` with an empty body) under this generator config — read the generated interface's return type directly rather than assuming `ResponseEntity<Void>`.
 
 ## Examples
 
-See the five inline before/after and annotated code snippets under Guidance above:
+See the six inline before/after and annotated code snippets under Guidance above:
 1. `HealthController` needing its own `@RestController` despite `HealthApi` already declaring one.
 2. `AssetPage.propertySize` vs JSON `"size"`.
 3. `tags: nullable: true` fix for `CreateAssetRequest` in `openapi/openapi.yaml`.
 4. `AssetController.createAsset` before/after removing dead manual validation.
 5. `import ch.fasteque.sdd_demo.generated.model.Asset as AssetResponse` aliasing in the `Asset` domain package.
+6. `AssetsApi.deleteAsset` generating `ResponseEntity<Unit>` for a schema-less `204` response, confirmed by reading `build/generated/openapi/src/main/kotlin/ch/fasteque/sdd_demo/generated/api/AssetsApi.kt` directly.
 
 ## Related
 

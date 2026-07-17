@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Manages the lifecycle of assets in the system — creating new assets, retrieving them individually, and listing them with pagination.
+Manages the lifecycle of assets in the system — creating new assets, retrieving them individually, listing them with pagination, and deleting them.
 Assets are the core domain entity this API exposes, each identified by a system-generated id and described by a name, type, tags, and status.
 
 ## Requirements
@@ -39,6 +39,17 @@ The system SHALL provide a `GET /assets/{id}` endpoint that returns the asset ma
 #### Scenario: Asset not found
 - **WHEN** a client sends `GET /assets/{id}` for an id that does not exist
 - **THEN** the system returns a 404 status and does not return an asset body
+
+### Requirement: Delete Asset by Id
+The system SHALL provide a `DELETE /assets/{id}` endpoint that removes the asset matching the given id.
+
+#### Scenario: Successful deletion
+- **WHEN** a client sends `DELETE /assets/{id}` for an id that exists
+- **THEN** the system removes the asset from MongoDB and returns a 204 status with no body
+
+#### Scenario: Asset not found
+- **WHEN** a client sends `DELETE /assets/{id}` for an id that does not exist
+- **THEN** the system returns a 404 status and does not modify any asset data
 
 ### Requirement: List Assets
 The system SHALL provide a `GET /assets` endpoint that returns a paginated page of assets, ordered by insertion order, along with pagination metadata (page number, page size, total elements, and total pages).
