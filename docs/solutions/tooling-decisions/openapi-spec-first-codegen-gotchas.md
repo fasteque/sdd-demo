@@ -243,3 +243,4 @@ See the seven inline before/after and annotated code snippets under Guidance abo
 ## Related
 
 - `docs/residual-review-findings/c158db1.md` — the origin of the `AssetPage.size` field that this migration's codegen later renamed to `propertySize` (Gotcha 2). That record's two accepted trade-offs (unbounded `size`, `AssetPage` vs. `PagedModel<T>`) were revisited and reaffirmed, not changed, during this migration.
+- `docs/solutions/tooling-decisions/spring-controller-advice-precedence-and-exception-mapping.md` — a sibling doc for this same generator/config surface, but about *runtime* `@ControllerAdvice` bean precedence and exception-type resolution (a different Spring mechanism than the codegen-output surprises documented here) — the generated `Exceptions.kt` also declares its own `@ControllerAdvice`, which a hand-written one must out-order via `@Order` to win for a shared exception type.

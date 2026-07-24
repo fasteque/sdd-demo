@@ -9,7 +9,6 @@ import org.springframework.data.domain.Sort
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.RestController
-import org.springframework.web.server.ResponseStatusException
 
 private fun Asset.toResponse(): AssetResponse =
 	AssetResponse(
@@ -26,7 +25,9 @@ class AssetController(private val assetRepository: AssetRepository) : AssetsApi 
 	override fun createAsset(createAssetRequest: CreateAssetRequest): ResponseEntity<AssetResponse> {
 		val tags = createAssetRequest.tags ?: emptyList()
 		if (tags.any { it.isBlank() }) {
-			throw ResponseStatusException(HttpStatus.BAD_REQUEST, "tags must not contain blank values")
+			throw RequestValidationException(
+				listOf(FieldValidationError(field = "tags", code = "BLANK_VALUE", message = "must not contain blank values"))
+			)
 		}
 		val asset = Asset(
 			name = createAssetRequest.name,
@@ -40,13 +41,13 @@ class AssetController(private val assetRepository: AssetRepository) : AssetsApi 
 
 	override fun getAsset(id: String): ResponseEntity<AssetResponse> {
 		val asset = assetRepository.findById(id)
-			.orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "asset not found") }
+			.orElseThrow { ResourceNotFoundException("ASSET_NOT_FOUND", "asset not found") }
 		return ResponseEntity.ok(asset.toResponse())
 	}
 
 	override fun deleteAsset(id: String): ResponseEntity<Unit> {
 		if (!assetRepository.existsById(id)) {
-			throw ResponseStatusException(HttpStatus.NOT_FOUND, "asset not found")
+			throw ResourceNotFoundException("ASSET_NOT_FOUND", "asset not found")
 		}
 		assetRepository.deleteById(id)
 		return ResponseEntity.noContent().build()

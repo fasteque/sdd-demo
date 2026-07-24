@@ -1,11 +1,4 @@
-# Asset Management
-
-## Purpose
-
-Manages the lifecycle of assets in the system — creating new assets, retrieving them individually, listing them with pagination, and deleting them.
-Assets are the core domain entity this API exposes, each identified by a system-generated id and described by a name, type, tags, and status.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Create Asset
 The system SHALL provide a `POST /assets` endpoint that accepts a name, type, tags, and status, and persists the asset to MongoDB. Every tag SHALL be a non-blank string.
@@ -25,13 +18,6 @@ The system SHALL provide a `POST /assets` endpoint that accepts a name, type, ta
 #### Scenario: Tags are optional
 - **WHEN** a client sends `POST /assets` with a valid name, type, and status but no tags
 - **THEN** the system persists the asset with an empty tag list and returns it with a 201 status
-
-### Requirement: Asset Data Model
-Each asset SHALL be stored with the following fields: a system-generated unique id, a name, a type, a list of tags, and a status.
-
-#### Scenario: Asset stored with all fields
-- **WHEN** an asset is persisted
-- **THEN** the stored document contains `id`, `name`, `type`, `tags`, and `status` fields
 
 ### Requirement: Retrieve Asset by Id
 The system SHALL provide a `GET /assets/{id}` endpoint that returns the asset matching the given id.
