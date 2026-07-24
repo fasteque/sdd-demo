@@ -28,6 +28,8 @@ an OpenSpec change folder — treat `tasks.md` as the plan.
 
 No OpenSpec artifacts. Skip `/opsx:propose` entirely — the point of Tier 1 is that the fix is small and obvious enough not to need a reviewed plan.
 
+**Exception: for any change touching an HTTP endpoint's request/response shape (including error responses), check `openspec context` / referenced stores for applicable platform-wide conventions before implementing — even in Tier 1.** Skipping the reviewed-plan step does not mean skipping already-established shared contracts; those apply regardless of tier.
+
 1. If it's a genuine bug: `/ce-debug` — investigates and fixes the root cause directly
 2. If it's not a bug (typo, config tweak, dependency bump): just make the edit directly, no command needed
 3. `/ce-code-review` — still required, even for a one-line change
