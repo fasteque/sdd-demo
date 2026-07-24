@@ -1,7 +1,7 @@
 ---
-title: OAS-first codegen with openapi-generator (kotlin-spring) - six gotchas that don't show up until runtime or a real regression
+title: OAS-first codegen with openapi-generator (kotlin-spring) - seven gotchas that don't show up until runtime or a real regression
 date: 2026-07-15
-last_updated: 2026-07-17
+last_updated: 2026-07-24
 category: docs/solutions/tooling-decisions
 module: "API layer / HTTP controllers (Kotlin/Spring Boot codegen via org.openapi.generator)"
 problem_type: tooling_decision
@@ -11,19 +11,19 @@ applies_when:
   - "Adopting or maintaining an OpenAPI-spec-first workflow with org.openapi.generator (kotlin-spring generator, interfaceOnly mode) in a Spring Boot + Kotlin codebase"
   - "A controller class implements a generated *Api interface instead of hand-declaring request/response DTOs"
   - "An OAS schema property is optional but not marked nullable, and callers may send an explicit JSON null for it"
-  - "An OAS schema declares minLength/minimum/maximum constraints alongside hand-written validation in the controller"
+  - "An OAS schema declares minLength/minimum/maximum constraints (on a field itself, or on an array field's items) alongside hand-written validation in the controller"
   - "A Spring Data @Document domain entity shares a name with an OAS-generated response/request model in the same codebase"
 related_components: [testing_framework, development_workflow]
-tags: [openapi, openapi-generator, kotlin-spring, code-generation, spring-validation, component-scanning, import-aliasing, jackson]
+tags: [openapi, openapi-generator, kotlin-spring, bean-validation, array-items, component-scanning, import-aliasing, jackson]
 ---
 
-# OAS-first codegen with openapi-generator (kotlin-spring): six gotchas that don't show up until runtime or a real regression
+# OAS-first codegen with openapi-generator (kotlin-spring): seven gotchas that don't show up until runtime or a real regression
 
 ## Context
 
 `sdd-demo` (Kotlin, Spring Boot 4.1, Gradle, MongoDB) switched its HTTP endpoints to an OpenAPI-spec-first (OAS-first) workflow. `openapi/openapi.yaml` is now the contract of record. The `org.openapi.generator` Gradle plugin (`kotlin-spring` generator, `interfaceOnly: true`, `useSpringBoot4: true`, `useJackson3: true`, `useTags: true`) generates server interfaces and models into `build/generated/openapi` (gitignored, regenerated on every build via `compileKotlin.dependsOn("openApiGenerate")`). Controllers now implement the generated interface instead of hand-declaring request/response DTOs.
 
-The migration was done first as a trial on `GET /health`, then as a full migration of `AssetController` (`POST /assets`, `GET /assets/{id}`, `GET /assets`), bringing all four real endpoints in the repo under OAS coverage. A later change added `DELETE /assets/{id}` the same way, bringing the total to five OAS-covered endpoints and surfacing a sixth gotcha (below) around bodyless-response return types.
+The migration was done first as a trial on `GET /health`, then as a full migration of `AssetController` (`POST /assets`, `GET /assets/{id}`, `GET /assets`), bringing all four real endpoints in the repo under OAS coverage. A later change added `DELETE /assets/{id}` the same way, bringing the total to five OAS-covered endpoints and surfacing a sixth gotcha (below) around bodyless-response return types. A subsequent Tier-1 hotfix hardened `POST /assets` further — rejecting blank strings inside the `tags` array — and surfaced a seventh gotcha around array-item constraint enforcement.
 
 Several of the problems below are not visible by reading the OAS spec or the generator's plugin config — they only surface by actually reading the generated Kotlin source, by exercising the endpoint with a real integration test (MockMvc against a real Spring context), or, in one case, by empirically deleting code and rerunning the suite to check whether it was still doing anything. Each is a distinct, durable trap worth checking for on any future OAS-first migration in this codebase.
 
@@ -105,6 +105,8 @@ override fun createAsset(createAssetRequest: CreateAssetRequest): ResponseEntity
 
 Caveat worth naming: removing the checks changes the error RESPONSE BODY shape (from a custom reason message via `ResponseStatusException` to Spring's default validation-error body), even though the status code (400) stays the same — confirm no test or consumer depends on the specific error message text before deleting the "dead" code.
 
+**This gotcha covers constraints on a property's own schema (scalar fields) only.** It does not extend to constraints declared on an array field's `items:` sub-schema — see Gotcha 7, which found the opposite behavior for that case.
+
 ### Gotcha 5: domain model and generated API model name collisions need import aliasing
 
 When a persistence domain type (e.g. a Spring Data `@Document`) and its OAS-generated response schema share the same simple name (`Asset` in both cases), and the controller lives in the same package as the domain type (so it resolves unqualified, no import needed), an explicit import of the generated type with the same simple name is a compile error unless aliased:
@@ -149,6 +151,59 @@ override fun deleteAsset(id: String): ResponseEntity<Unit> {
 
 Unlike Gotcha 3 (a silent runtime regression), guessing `ResponseEntity<Void>` here fails loudly: a Kotlin `override` must match the interface's declared return type exactly, so the wrong guess is a compile error, not a passing-but-wrong test. `ResponseEntity.noContent().build()` itself would type-check against either `Unit` or `Void` — it's the override's declared return type that catches the mismatch. Still costs a compile-error detour if the generated interface isn't read first, same as Gotcha 2's field-rename trap.
 
+### Gotcha 7: kotlin-spring does not emit per-item Bean Validation for array/`List<String>` fields, even when `items:` declares `minLength`/`pattern`
+
+`openapi/openapi.yaml`'s `CreateAssetRequest.tags` schema was changed from a plain array of strings to one whose `items:` sub-schema declares both `minLength: 1` and `pattern: "\\S"` (`openapi/openapi.yaml:153-159`):
+
+```yaml
+tags:
+  type: array
+  nullable: true
+  items:
+    type: string
+    minLength: 1
+    pattern: "\\S"
+```
+
+After running `./gradlew openApiGenerate`, the regenerated `CreateAssetRequest.kt` shows the scalar fields `name`, `type`, and `status` — each carrying a top-level `minLength: 1` in the OAS schema — getting a `@get:Size(min=1)` annotation exactly as Gotcha 4 describes:
+
+```kotlin
+data class CreateAssetRequest(
+    @get:Size(min=1)
+    @get:JsonProperty("name", required = true) val name: kotlin.String,
+
+    @get:Size(min=1)
+    @get:JsonProperty("type", required = true) val type: kotlin.String,
+
+    @get:Size(min=1)
+    @get:JsonProperty("status", required = true) val status: kotlin.String,
+
+    @get:JsonProperty("tags") val tags: kotlin.collections.List<kotlin.String>? = null
+)
+```
+
+`tags`, despite its `items:` sub-schema now declaring both `minLength: 1` and `pattern: "\\S"`, gets no validation annotation whatsoever. This was confirmed empirically by reading the generated file directly, both before and after adding `pattern` — neither state produced a per-item constraint annotation on `tags`. kotlin-spring's Bean Validation emission, at least under this generator config (`kotlin-spring`, `interfaceOnly: true`, `useSpringBoot4: true`, `useJackson3: true`), only translates constraints declared directly on a property's own schema (scalar fields) into annotations — it does not walk into an array property's `items:` sub-schema to emit a per-element constraint.
+
+Because of this, the hand-written guard clause in `AssetController.createAsset` (`AssetController.kt:27-30`) is NOT dead code shadowing generated validation the way Gotcha 4 would predict — it is the sole enforcement of the "no blank tags" rule:
+
+```kotlin
+override fun createAsset(createAssetRequest: CreateAssetRequest): ResponseEntity<AssetResponse> {
+    val tags = createAssetRequest.tags ?: emptyList()
+    if (tags.any { it.isBlank() }) {
+        throw ResponseStatusException(HttpStatus.BAD_REQUEST, "tags must not contain blank values")
+    }
+    val asset = Asset(name = createAssetRequest.name, type = createAssetRequest.type, tags = tags, status = createAssetRequest.status)
+    val saved = assetRepository.save(asset)
+    return ResponseEntity.status(HttpStatus.CREATED).body(saved.toResponse())
+}
+```
+
+If this check were removed under the Gotcha-4-derived assumption that "OAS constraints get enforced by the generator eventually," a request like `{"name":"Cover Photo","type":"image","tags":["hero"," "],"status":"draft"}` would sail straight through deserialization and reach `assetRepository.save(...)`, persisting a blank tag.
+
+**Addendum — `minLength: 1` alone doesn't mean "non-blank":** a related gap was caught by code review during this same change. `minLength: 1` in JSON Schema/OpenAPI only forbids a zero-length string; a single space (`" "`, length 1) satisfies `minLength: 1` while still being "blank" by the `isBlank()` definition the hand-written check uses. Before the fix, the *documented* OAS contract (`minLength: 1` only) was looser than the *enforced* behavior (the hand-written `.isBlank()` check, which also rejects whitespace-only strings). The fix: add `pattern: "\\S"` alongside `minLength: 1` on the `tags` items schema, so the documented contract now correctly expresses "at least one non-whitespace character," matching the hand-written enforcement. This `pattern` addition is documentation/contract-accuracy motivated — it produces no new generated annotation on `tags`; enforcement still runs entirely through the hand-written guard clause.
+
+Verified against a real MongoDB instance: `AssetControllerTests.kt` includes a `rejects blank tag value` test (`AssetControllerTests.kt:64-74`) that POSTs `"tags":["hero"," "]` and asserts a 400 with nothing persisted. The full suite, including this test, was run against a live local MongoDB and passed, confirming the hand-written check — not any generated annotation — is what makes this test pass.
+
 ## Why This Matters
 
 Each gotcha fails in a way that looks like success until you look closely:
@@ -159,6 +214,7 @@ Each gotcha fails in a way that looks like success until you look closely:
 - Gotcha 4 doesn't break anything today, but leaves misleading code in the repository: a future maintainer who reads the guard clause will believe the controller is responsible for validation, and may either duplicate the check elsewhere or trust it in a place where the generated validation does NOT apply (e.g. a code path that bypasses the generated interface).
 - Gotcha 5 is a plain compile error, but confusing the first time it's hit — the fix (import aliasing) isn't obvious to anyone unfamiliar with the pattern, and the decision of where mapping code lives compounds across every future OAS-migrated controller.
 - Gotcha 6 is also a plain compile error (loud, unlike Gotcha 3), but the assumption it corrects — "no response body means `ResponseEntity<Void>`" — is a reasonable one carried over from plain Spring MVC, and this generator doesn't follow it. Worth a few seconds reading the generated interface to avoid the detour.
+- Gotcha 7 is the inverse of Gotcha 4, and that inversion is exactly what makes it dangerous: Gotcha 4 trains the instinct that "once an OAS constraint exists, the generator's Bean Validation annotations will enforce it, so a hand-written check for that same constraint becomes redundant and safe to delete." Applying that instinct to an array `items:` constraint — deleting the `tags.any { it.isBlank() }` guard clause on the assumption it'd be enforced the same way scalar `minLength` is — would silently reopen the exact gap this hotfix closed, this time with a fully-passing test suite (scalar-field 400s still work) masking that array-item blanks flow straight through. The failure mode is a silently narrower guarantee than the OAS spec appears to promise, discoverable only by testing the specific blank-array-item case. As with the other gotchas, this is invisible from the spec, the plugin config, or a `git diff` of committed source alone — the generated model has to be opened and read to see that `tags` carries no annotation while its sibling scalar fields do.
 
 Because `build/generated/openapi` is gitignored and regenerated on every build, none of this is visible from a `git diff` or a code review of committed source alone — the generated code has to be inspected directly, and the runtime behavior has to be tested, to catch these classes of issues.
 
@@ -171,16 +227,18 @@ Because `build/generated/openapi` is gitignored and regenerated on every build, 
 - Any time a domain/persistence type and a generated API model share a simple name in the same package — decide up front whether to alias the import or rename one of the types, and note whether extracting a dedicated mapper is warranted once more than one controller repeats the shape.
 - After running `./gradlew openApiGenerate`, before writing controller code against the generated types — read the generated model/interface source at least once for the endpoint being implemented.
 - Any time an OAS operation declares a 2xx response with no `content:` schema (a `204`, or a `200`/`201` with an empty body) under this generator config — read the generated interface's return type directly rather than assuming `ResponseEntity<Void>`.
+- Any time an OAS schema declares an `items:`-level constraint (`minLength`, `pattern`, `minimum`/`maximum` on array items) under this generator config — read the regenerated model directly to verify whether a per-item annotation was actually emitted on that property; do not assume parity with top-level/scalar field constraint behavior (Gotcha 4). If no annotation appears, hand-written validation for that constraint is required and load-bearing, not optional or redundant.
 
 ## Examples
 
-See the six inline before/after and annotated code snippets under Guidance above:
+See the seven inline before/after and annotated code snippets under Guidance above:
 1. `HealthController` needing its own `@RestController` despite `HealthApi` already declaring one.
 2. `AssetPage.propertySize` vs JSON `"size"`.
 3. `tags: nullable: true` fix for `CreateAssetRequest` in `openapi/openapi.yaml`.
 4. `AssetController.createAsset` before/after removing dead manual validation.
 5. `import ch.fasteque.sdd_demo.generated.model.Asset as AssetResponse` aliasing in the `Asset` domain package.
 6. `AssetsApi.deleteAsset` generating `ResponseEntity<Unit>` for a schema-less `204` response, confirmed by reading `build/generated/openapi/src/main/kotlin/ch/fasteque/sdd_demo/generated/api/AssetsApi.kt` directly.
+7. `CreateAssetRequest.tags` (`openapi/openapi.yaml:153-159`) gaining `minLength: 1` and, after code review caught that `minLength: 1` alone still allows whitespace-only strings, `pattern: "\\S"` — while the regenerated `CreateAssetRequest.kt` shows `tags` with no validation annotation at all (contrast with `name`/`type`/`status`, each carrying `@get:Size(min=1)`). The hand-written guard clause in `AssetController.createAsset` (`AssetController.kt:27-30`) is therefore the sole enforcement mechanism, verified by the `rejects blank tag value` test in `AssetControllerTests.kt:64-74` passing against a real MongoDB instance.
 
 ## Related
 

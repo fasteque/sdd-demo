@@ -62,6 +62,18 @@ class AssetControllerTests {
 	}
 
 	@Test
+	fun `rejects blank tag value`() {
+		mockMvc.perform(
+			post("/assets")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""{"name":"Cover Photo","type":"image","tags":["hero"," "],"status":"draft"}""")
+		)
+			.andExpect(status().isBadRequest)
+
+		assertTrue(assetRepository.findAll().isEmpty())
+	}
+
+	@Test
 	fun `defaults tags to empty list when omitted`() {
 		mockMvc.perform(
 			post("/assets")

@@ -24,10 +24,14 @@ private fun Asset.toResponse(): AssetResponse =
 class AssetController(private val assetRepository: AssetRepository) : AssetsApi {
 
 	override fun createAsset(createAssetRequest: CreateAssetRequest): ResponseEntity<AssetResponse> {
+		val tags = createAssetRequest.tags ?: emptyList()
+		if (tags.any { it.isBlank() }) {
+			throw ResponseStatusException(HttpStatus.BAD_REQUEST, "tags must not contain blank values")
+		}
 		val asset = Asset(
 			name = createAssetRequest.name,
 			type = createAssetRequest.type,
-			tags = createAssetRequest.tags ?: emptyList(),
+			tags = tags,
 			status = createAssetRequest.status,
 		)
 		val saved = assetRepository.save(asset)

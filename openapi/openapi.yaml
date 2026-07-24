@@ -155,6 +155,8 @@ components:
           nullable: true
           items:
             type: string
+            minLength: 1
+            pattern: "\\S"
         status:
           type: string
           minLength: 1
