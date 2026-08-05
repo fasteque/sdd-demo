@@ -1,5 +1,49 @@
 {
   "enabledPlugins": {
     "compound-engineering@compound-engineering-plugin": true
+  },
+  "permissions": {
+    "allow": [
+      "Bash(git status)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git add *)",
+      "Bash(git check-ignore *)",
+      "Bash(git symbolic-ref *)",
+      "Bash(./gradlew test *)",
+      "Bash(./gradlew build *)",
+      "Bash(./gradlew compileKotlin*)",
+      "Bash(./gradlew openApiGenerate*)",
+      "Bash(docker ps*)",
+      "Bash(docker info*)",
+      "Bash(openspec context*)",
+      "Bash(openspec doctor*)",
+      "Bash(openspec status*)",
+      "Bash(openspec show*)",
+      "Bash(openspec list*)",
+      "Bash(openspec validate*)",
+      "Bash(openspec --version)",
+      "Bash(gh pr *)",
+      "Bash(gh issue *)"
+    ],
+    "ask": [
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(git reset *)",
+      "Bash(curl *)"
+    ],
+    "deny": [
+      "Bash(git rm *)",
+      "Bash(git reset --hard*)",
+      "Bash(git clean*)",
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(git push -f *)",
+      "Bash(git rebase*)",
+      "Bash(git restore*)",
+      "Bash(git checkout -- *)",
+      "Bash(git branch -D*)",
+      "Bash(taskkill*)"
+    ]
   }
 }
