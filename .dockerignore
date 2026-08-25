@@ -1,0 +1,8 @@
+.git
+.gradle
+.idea
+.kotlin
+docs
+openspec
+.compound-engineering
+build/libs/*-plain.jar

@@ -1,6 +1,5 @@
 spring:
   application:
     name: sdd-demo
-  data:
-    mongodb:
-      uri: mongodb://localhost:27017/sdddemo
+  mongodb:
+    uri: mongodb://localhost:27017/sdddemo

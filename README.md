@@ -100,6 +100,20 @@ docker run -d --name local-mongo -p 27017:27017 mongo:7
 ./gradlew bootRun
 ```
 
+## Running in a container
+
+Builds the app jar on the host, then runs the app and MongoDB together in
+Docker (no Gradle inside the image):
+
+```powershell
+./gradlew bootJar
+docker compose -f compose.app.yaml up --build
+```
+
+App is available at `http://localhost:8080`. This is a separate stack from
+`compose.yaml` (used by `spring-boot-docker-compose` during `./gradlew
+bootRun`) — that dev loop is unaffected.
+
 Tech stack details, conventions, and the approved-dependency list live in
 `docs/tech-stack.md`.
 
