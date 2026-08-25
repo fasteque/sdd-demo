@@ -93,26 +93,64 @@ a full feature once it recognized it was touching a mandatory shared contract.
 - This has not been tried against any officially sanctioned tooling — it is a
   personal evaluation, not an endorsement of a specific toolchain.
 
-## Running locally
+## Running the application
+
+Three ways to run it, depending on what you need. All require Docker
+(Docker Desktop or another Docker Compose-compatible engine) running.
+
+### 1. Local development
+
+MongoDB starts and stops automatically — `spring-boot-docker-compose`
+manages it via `compose.yaml` for the lifetime of the JVM. No manual
+`docker run` needed.
 
 ```powershell
-docker run -d --name local-mongo -p 27017:27017 mongo:7
 ./gradlew bootRun
 ```
 
-## Running in a container
+App is available at `http://localhost:8080`.
+
+### 2. Running tests
+
+Same auto-start mechanism as above — the test JVM gets a fresh MongoDB
+automatically:
+
+```powershell
+./gradlew test
+```
+
+### 3. Fully containerized (app + MongoDB)
 
 Builds the app jar on the host, then runs the app and MongoDB together in
-Docker (no Gradle inside the image):
+Docker — no Gradle inside the image. This is a separate stack from
+`compose.yaml` above (see `compose.app.yaml`); the local-dev loop is
+unaffected.
 
 ```powershell
 ./gradlew bootJar
 docker compose -f compose.app.yaml up --build
 ```
 
-App is available at `http://localhost:8080`. This is a separate stack from
-`compose.yaml` (used by `spring-boot-docker-compose` during `./gradlew
-bootRun`) — that dev loop is unaffected.
+App is available at `http://localhost:8080`. MongoDB is not published to
+the host in this mode — the app reaches it over the internal Docker
+network only. Stop with:
+
+```powershell
+docker compose -f compose.app.yaml down
+```
+
+Add `-v` to also delete the MongoDB data volume.
+
+### Building just the image
+
+To build the app image alone, e.g. to run it against your own MongoDB
+instance instead of the bundled `compose.app.yaml` one:
+
+```powershell
+./gradlew bootJar
+docker build -t sdd-demo .
+docker run -p 8080:8080 -e SPRING_MONGODB_URI="mongodb://<your-mongo-host>:27017/sdddemo" sdd-demo
+```
 
 Tech stack details, conventions, and the approved-dependency list live in
 `docs/tech-stack.md`.
