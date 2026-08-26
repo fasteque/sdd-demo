@@ -1,5 +1,11 @@
 _format_version: "3.0"
 
+plugins:
+  - name: correlation-id
+    config:
+      header_name: Request-Id
+      echo_downstream: true
+
 services:
   - name: app
     url: http://app:8080

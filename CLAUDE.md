@@ -44,7 +44,7 @@ No OpenSpec artifacts. Skip `/opsx:propose` entirely — the point of Tier 1 is 
 4. `/ce-work` — implements against that plan, checking off `tasks.md` as it goes
 5. `/ce-code-review` — parallel specialist review of the implementation
 6. `/opsx:apply` if not already applied by `ce-work`, to keep OpenSpec's own tracking in sync
-7. `/ce-compound` — write down what was learned into `docs/solutions/`, organized by category with YAML frontmatter (`module`, `tags`, `problem_type`) — relevant to check when implementing or debugging in a documented area
+7. `/ce-compound` — write down what was learned into `docs/solutions/`, organized by category with YAML frontmatter (`module`, `tags`, `problem_type`) — relevant to check when implementing or debugging in a documented area. Also maintains `docs/CONCEPTS.md`, shared domain vocabulary (entities, named processes, status concepts) — relevant when orienting to the codebase or discussing domain concepts
 8. `/opsx:sync` — merge the delta spec into the living spec
 9. `/opsx:archive` — file the OpenSpec change
 10. Commit and push manually (this final commit captures the implementation, the compound learnings, the synced spec, and the archived change together; `/ce-commit-push-pr` exists as a one-shot alternative but isn't used here yet — evaluate separately before adopting, since it also opens a PR automatically)
