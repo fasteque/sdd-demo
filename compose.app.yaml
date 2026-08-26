@@ -1,12 +1,23 @@
 name: sdd-demo-app
 
 services:
+  kong:
+    image: 'kong:3.9.3'
+    environment:
+      KONG_DATABASE: 'off'
+      KONG_DECLARATIVE_CONFIG: /etc/kong/kong.yml
+      KONG_ADMIN_LISTEN: 'off'
+    volumes:
+      - ./kong/kong.yml:/etc/kong/kong.yml:ro
+    ports:
+      - '8080:8000'
+    depends_on:
+      - app
+
   app:
     build:
       context: .
       dockerfile: Dockerfile
-    ports:
-      - '8080:8080'
     environment:
       SPRING_MONGODB_URI: mongodb://mongodb:27017/sdddemo
     depends_on:

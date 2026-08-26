@@ -119,20 +119,24 @@ automatically:
 ./gradlew test
 ```
 
-### 3. Fully containerized (app + MongoDB)
+### 3. Fully containerized (app + MongoDB + Kong Gateway)
 
-Builds the app jar on the host, then runs the app and MongoDB together in
-Docker — no Gradle inside the image. This is a separate stack from
-`compose.yaml` above (see `compose.app.yaml`); the local-dev loop is
-unaffected.
+Builds the app jar on the host, then runs the app, MongoDB, and Kong
+Gateway (OSS, DB-less mode) together in Docker — no Gradle inside the
+image. This is a separate stack from `compose.yaml` above (see
+`compose.app.yaml`); the local-dev loop is unaffected.
 
 ```powershell
 ./gradlew bootJar
 docker compose -f compose.app.yaml up --build
 ```
 
-App is available at `http://localhost:8080`. MongoDB is not published to
-the host in this mode — the app reaches it over the internal Docker
+App is available at `http://localhost:8080`, proxied through Kong
+Gateway — the app's own port is not published to the host in this mode,
+only reachable from Kong over the internal Docker network. Kong's routing
+is declarative, defined in the version-controlled `kong/kong.yml` (one
+service, one catch-all route, no plugins). MongoDB is likewise not
+published to the host — the app reaches it over the internal Docker
 network only. Stop with:
 
 ```powershell
