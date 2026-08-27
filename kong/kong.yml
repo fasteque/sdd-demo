@@ -28,3 +28,9 @@ services:
             config:
               key_in_query: false
               key_in_body: false
+          - name: rate-limiting
+            config:
+              minute: 5
+              limit_by: consumer
+              policy: local
+              hide_client_headers: true
