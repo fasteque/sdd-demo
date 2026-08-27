@@ -34,3 +34,15 @@ services:
               limit_by: consumer
               policy: local
               hide_client_headers: true
+          - name: proxy-cache
+            config:
+              strategy: memory
+              cache_ttl: 30
+              request_method:
+                - GET
+                - HEAD
+              response_code:
+                - 200
+              content_type:
+                - application/json
+                - application/json; charset=utf-8
