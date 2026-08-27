@@ -6,11 +6,25 @@ plugins:
       header_name: Request-Id
       echo_downstream: true
 
+consumers:
+  - username: asset-client
+    keyauth_credentials:
+      - key: "__KONG_ASSET_API_KEY__"
+
 services:
   - name: app
     url: http://app:8080
     routes:
-      - name: catch-all
+      - name: health
         paths:
-          - /
+          - /health
         strip_path: false
+      - name: assets
+        paths:
+          - /assets
+        strip_path: false
+        plugins:
+          - name: key-auth
+            config:
+              key_in_query: false
+              key_in_body: false

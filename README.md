@@ -89,7 +89,9 @@ a full feature once it recognized it was touching a mandatory shared contract.
   not yet resolved).
 - Enforcement of shared conventions is currently review-based, not mechanical —
   no CI linting or schema validation wired up yet.
-- No authentication layer anywhere in this app (out of scope for this PoC).
+- No app-level authentication — only the asset endpoints are gated, and only at
+  the gateway (API key via Kong's `key-auth` plugin); the app itself trusts
+  anything Kong forwards to it.
 - This has not been tried against any officially sanctioned tooling — it is a
   personal evaluation, not an endorsement of a specific toolchain.
 
@@ -126,6 +128,14 @@ Gateway (OSS, DB-less mode) together in Docker — no Gradle inside the
 image. This is a separate stack from `compose.yaml` above (see
 `compose.app.yaml`); the local-dev loop is unaffected.
 
+Before the first run, create a local `.env` (gitignored, never committed)
+from the checked-in template, and put a real key value in it:
+
+```powershell
+cp .env.example .env
+# then edit .env and replace the placeholder with a real value
+```
+
 ```powershell
 ./gradlew bootJar
 docker compose -f compose.app.yaml up --build
@@ -135,7 +145,13 @@ App is available at `http://localhost:8080`, proxied through Kong
 Gateway — the app's own port is not published to the host in this mode,
 only reachable from Kong over the internal Docker network. Kong's routing
 is declarative, defined in the version-controlled `kong/kong.yml` (one
-service, one catch-all route, no plugins). MongoDB is likewise not
+service, two routes: `/health` is open, and the asset endpoints
+(`/assets`, `/assets/{id}`) require an API key via Kong's `key-auth`
+plugin — send it as an `apikey` header). The committed `kong/kong.yml`
+holds a placeholder instead of the real key; it's substituted in from
+`.env` at container startup and never touches version control. A path
+matching neither route (i.e. anything other than `/health` or an asset
+path) gets a 404 straight from Kong, not the app. MongoDB is likewise not
 published to the host — the app reaches it over the internal Docker
 network only. Stop with:
 
@@ -144,6 +160,16 @@ docker compose -f compose.app.yaml down
 ```
 
 Add `-v` to also delete the MongoDB data volume.
+
+```powershell
+# Example: calling a protected endpoint
+# (curl.exe forces the real curl binary -- PowerShell's default `curl` alias
+# is Invoke-WebRequest, which does not accept a bare -H flag)
+curl.exe http://localhost:8080/assets -H "apikey: <your key from .env>"
+```
+
+Or run `kong/test-gateway.sh` (requires a POSIX shell, e.g. Git Bash or WSL)
+against the running stack to check the health/auth/routing behavior end to end.
 
 ### Building just the image
 

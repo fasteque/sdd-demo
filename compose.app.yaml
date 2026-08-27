@@ -3,12 +3,24 @@ name: sdd-demo-app
 services:
   kong:
     image: 'kong:3.9.3'
+    entrypoint: ['/bin/sh', '-c']
+    command:
+      - |
+        if [ -z "$$KONG_ASSET_API_KEY" ]; then
+          echo "KONG_ASSET_API_KEY is not set" >&2
+          exit 1
+        fi
+        ESCAPED_KEY=$$(printf '%s' "$$KONG_ASSET_API_KEY" | sed -e 's/[&#\\]/\\&/g')
+        sed "s#__KONG_ASSET_API_KEY__#$$ESCAPED_KEY#" /etc/kong/kong.yml.template > /etc/kong/kong.yml
+        exec /docker-entrypoint.sh kong docker-start
+    env_file:
+      - .env
     environment:
       KONG_DATABASE: 'off'
       KONG_DECLARATIVE_CONFIG: /etc/kong/kong.yml
       KONG_ADMIN_LISTEN: 'off'
     volumes:
-      - ./kong/kong.yml:/etc/kong/kong.yml:ro
+      - ./kong/kong.yml:/etc/kong/kong.yml.template:ro
     ports:
       - '8080:8000'
     depends_on:
