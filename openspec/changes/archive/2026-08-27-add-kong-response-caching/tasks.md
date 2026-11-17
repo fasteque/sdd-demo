@@ -13,7 +13,7 @@
 
 ## 3. Spec Sync
 
-- [x] 3.1 Confirm `openspec/changes/add-kong-response-caching/specs/api-gateway/spec.md` accurately reflects the final `kong/kong.yml` plugin config (TTL, cacheable methods/status codes, strategy) before running `/opsx:sync`
+- [x] 3.1 Confirm `openspec/changes/add-kong-response-caching/specs/api-gateway/spec.md` accurately reflects the final `kong/kong.yml` plugin config (TTL, cacheable methods/status codes, strategy) before running `/openspec-sync-specs`
 
 ## 4. Automated Coverage
 

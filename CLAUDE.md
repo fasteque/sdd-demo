@@ -3,7 +3,7 @@
 ## Spec ownership
 
 This project uses **OpenSpec** as the single source of truth for feature specs.
-All feature work starts with `/opsx:propose`, producing:
+All feature work starts with `/openspec-propose`, producing:
 - `openspec/changes/<change-name>/proposal.md`
 - `openspec/changes/<change-name>/design.md`
 - `openspec/changes/<change-name>/tasks.md`
@@ -26,7 +26,7 @@ an OpenSpec change folder — treat `tasks.md` as the plan.
 
 ### Tier 1 — Hotfix
 
-No OpenSpec artifacts. Skip `/opsx:propose` entirely — the point of Tier 1 is that the fix is small and obvious enough not to need a reviewed plan.
+No OpenSpec artifacts. Skip `/openspec-propose` entirely — the point of Tier 1 is that the fix is small and obvious enough not to need a reviewed plan.
 
 **Exception: for any change touching an HTTP endpoint's request/response shape (including error responses), check `openspec context` / referenced stores for applicable platform-wide conventions before implementing — even in Tier 1.** Skipping the reviewed-plan step does not mean skipping already-established shared contracts; those apply regardless of tier.
 
@@ -38,15 +38,15 @@ No OpenSpec artifacts. Skip `/opsx:propose` entirely — the point of Tier 1 is 
 
 ### Tier 2 — Standard Feature
 
-1. `/opsx:propose "<feature description>"` — human reviews `proposal.md`, `design.md`, `tasks.md`
+1. `/openspec-propose "<feature description>"` — human reviews `proposal.md`, `design.md`, `tasks.md`
 2. *(optional)* `/ce-brainstorm` — only if the approach is genuinely unclear; skip when the OpenSpec proposal is already clear
 3. `/ce-plan` — reads the existing `openspec/changes/<change-name>/tasks.md`, confirms/refines execution approach
 4. `/ce-work` — implements against that plan, checking off `tasks.md` as it goes
 5. `/ce-code-review` — parallel specialist review of the implementation
-6. `/opsx:apply` if not already applied by `ce-work`, to keep OpenSpec's own tracking in sync
+6. `/openspec-apply-change` if not already applied by `ce-work`, to keep OpenSpec's own tracking in sync
 7. `/ce-compound` — write down what was learned into `docs/solutions/`, organized by category with YAML frontmatter (`module`, `tags`, `problem_type`) — relevant to check when implementing or debugging in a documented area. Also maintains `docs/CONCEPTS.md`, shared domain vocabulary (entities, named processes, status concepts) — relevant when orienting to the codebase or discussing domain concepts
-8. `/opsx:sync` — merge the delta spec into the living spec
-9. `/opsx:archive` — file the OpenSpec change
+8. `/openspec-sync-specs` — merge the delta spec into the living spec
+9. `/openspec-archive-change` — file the OpenSpec change
 10. Commit and push manually (this final commit captures the implementation, the compound learnings, the synced spec, and the archived change together; `/ce-commit-push-pr` exists as a one-shot alternative but isn't used here yet — evaluate separately before adopting, since it also opens a PR automatically)
 
 ### Tier 3 — Major Feature
@@ -61,14 +61,14 @@ Triggers: architecture changes, anything spanning multiple repos/services, or sc
 
 Two AI frameworks and one build-time toolchain collaborate here. This isn't the full command list (see **Tiers** above for that) — it's specifically the layers where two tools could collide over the same artifact. Each layer has exactly one owner — don't cross it.
 
-| Layer                 | Owner             | Commands                                       | Produces                                                                                                            |
-|-----------------------|-------------------|------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
-| Spec artifacts        | OpenSpec          | `/opsx:propose`, `/opsx:sync`, `/opsx:archive` | `proposal.md`, `design.md`, `tasks.md`, archived change                                                             |
-| Execution planning    | CE                | `/ce-plan`                                     | Refined execution plan (reads OpenSpec's `tasks.md`, never replaces it)                                             |
-| Implementation        | CE                | `/ce-work`                                     | Code changes; marks tasks `[x]` in OpenSpec's `tasks.md`                                                            |
-| Code review           | CE                | `/ce-code-review`                              | Review findings                                                                                                     |
-| Knowledge capture     | CE                | `/ce-compound`                                 | `docs/solutions/`                                                                                                   |
-| Wire contracts (HTTP) | OpenAPI Generator | `./gradlew openApiGenerate`                    | Generated Kotlin server interfaces + models under `build/generated/openapi` (gitignored, regenerated at build time) |
+| Layer                 | Owner             | Commands                                                                | Produces                                                                                                            |
+|-----------------------|-------------------|-------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
+| Spec artifacts        | OpenSpec          | `/openspec-propose`, `/openspec-sync-specs`, `/openspec-archive-change` | `proposal.md`, `design.md`, `tasks.md`, archived change                                                             |
+| Execution planning    | CE                | `/ce-plan`                                                              | Refined execution plan (reads OpenSpec's `tasks.md`, never replaces it)                                             |
+| Implementation        | CE                | `/ce-work`                                                              | Code changes; marks tasks `[x]` in OpenSpec's `tasks.md`                                                            |
+| Code review           | CE                | `/ce-code-review`                                                       | Review findings                                                                                                     |
+| Knowledge capture     | CE                | `/ce-compound`                                                          | `docs/solutions/`                                                                                                   |
+| Wire contracts (HTTP) | OpenAPI Generator | `./gradlew openApiGenerate`                                             | Generated Kotlin server interfaces + models under `build/generated/openapi` (gitignored, regenerated at build time) |
 
 **Artifact path contract:** OpenSpec writes to `openspec/changes/<change-name>/`. CE commands (`/ce-plan`, `/ce-work`) MUST read from this path. Never duplicate or shadow OpenSpec artifacts.
 

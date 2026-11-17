@@ -43,15 +43,15 @@ that the agent is expected to classify itself into.
 
 ## Workflow
 
-| Step | Command | What it does |
-|---|---|---|
-| 1 | `/opsx:explore` | Think through an idea, investigate the codebase — no files created |
-| 2 | `/opsx:propose` | Creates the change and generates planning artifacts (`proposal.md`, `specs/`, `design.md`, `tasks.md`) |
-| 3 | *(review)* | Human reads and approves the plan before anything is built |
-| 4 | `/opsx:apply` | Implements the tasks, checking them off as it goes |
-| 5 | `/opsx:update` | Revises the plan mid-flight if needed, keeping artifacts coherent |
-| 6 | `/opsx:sync` | Merges the delta spec into the project's living spec |
-| 7 | `/opsx:archive` | Files the completed change away |
+| Step | Command                    | What it does                                                                                           |
+|------|----------------------------|--------------------------------------------------------------------------------------------------------|
+| 1    | `/openspec-explore`        | Think through an idea, investigate the codebase — no files created                                     |
+| 2    | `/openspec-propose`        | Creates the change and generates planning artifacts (`proposal.md`, `specs/`, `design.md`, `tasks.md`) |
+| 3    | *(review)*                 | Human reads and approves the plan before anything is built                                             |
+| 4    | `/openspec-apply-change`   | Implements the tasks, checking them off as it goes                                                     |
+| 5    | `/openspec-update-change`  | Revises the plan mid-flight if needed, keeping artifacts coherent                                      |
+| 6    | `/openspec-sync-specs`     | Merges the delta spec into the project's living spec                                                   |
+| 7    | `/openspec-archive-change` | Files the completed change away                                                                        |
 
 See `CLAUDE.md` for the full tier definitions and how Compound Engineering's
 `/ce-*` commands interleave with this sequence.

@@ -25,9 +25,9 @@ The generic Compound Engineering skills have opinionated defaults:
 
 This repo (`sdd-demo`) does not use that convention. Its root `CLAUDE.md` declares OpenSpec as the single source of truth for feature specs:
 
-> This project uses **OpenSpec** as the single source of truth for feature specs. All feature work starts with `/opsx:propose`, producing `openspec/changes/<change-name>/proposal.md`, `design.md`, `tasks.md`.
+> This project uses **OpenSpec** as the single source of truth for feature specs. All feature work starts with `/openspec-propose`, producing `openspec/changes/<change-name>/proposal.md`, `design.md`, `tasks.md`.
 > **Compound Engineering commands (`/ce-plan`, `/ce-work`) MUST read from this path.** Do not create a separate brainstorm/plan document for features that already have an OpenSpec change folder — treat `tasks.md` as the plan.
-> Workflow (Tier 2): 1. `/opsx:propose` 2. `/ce-plan` (reads the existing tasks.md, confirms/refines execution approach) 3. `/ce-work` (implements against that plan, checking off tasks.md as it goes) 4. `/ce-code-review` 5. `/opsx:apply` 6. `/ce-compound` 7. `/opsx:archive`
+> Workflow (Tier 2): 1. `/openspec-propose` 2. `/ce-plan` (reads the existing tasks.md, confirms/refines execution approach) 3. `/ce-work` (implements against that plan, checking off tasks.md as it goes) 4. `/ce-code-review` 5. `/openspec-apply-change` 6. `/ce-compound` 7. `/openspec-archive-change`
 
 If an agent runs `/ce-plan` or `/ce-work` without first reading this file, two failure modes are both plausible and both bad:
 

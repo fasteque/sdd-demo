@@ -11,13 +11,13 @@
 
 ## 3. Spec Sync
 
-- [x] 3.1 Confirm `openspec/changes/add-kong-rate-limiting/specs/api-gateway/spec.md` accurately reflects the final `kong/kong.yml` plugin config (limit values, `limit_by`, `policy`) before running `/opsx:sync`
+- [x] 3.1 Confirm `openspec/changes/add-kong-rate-limiting/specs/api-gateway/spec.md` accurately reflects the final `kong/kong.yml` plugin config (limit values, `limit_by`, `policy`) before running `/openspec-sync-specs`
 
 ## 4. Code Review Fix -- Response Header Leak
 
 - [x] 4.1 Add `hide_client_headers: true` to the `rate-limiting` plugin config in `kong/kong.yml` (code review found the default `false` injects `RateLimit-*`/`X-RateLimit-*` headers into every response, not just the 429, contradicting the "unmodified response" guarantee) and verify live that an in-limit `GET /assets` returns `200` with no rate-limit headers present
 - [x] 4.2 Verify live that an over-limit request still returns `429` with a Kong-generated JSON body, and note that `hide_client_headers: true` also removes `Retry-After`/`RateLimit-*` from the 429 response (documented as an accepted trade-off in design.md)
-- [x] 4.3 Update `specs/api-gateway/spec.md`'s delta scenarios and `design.md`/`proposal.md` to reflect the `hide_client_headers: true` config and its 429-header trade-off before running `/opsx:sync`
+- [x] 4.3 Update `specs/api-gateway/spec.md`'s delta scenarios and `design.md`/`proposal.md` to reflect the `hide_client_headers: true` config and its 429-header trade-off before running `/openspec-sync-specs`
 
 ## 5. Code Review Fix -- Automated Rate-Limit Coverage
 
