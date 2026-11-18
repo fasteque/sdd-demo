@@ -2,7 +2,7 @@ name: sdd-demo-app
 
 services:
   kong:
-    image: 'kong:3.9.3'
+    image: 'kong:3.9.4'
     entrypoint: ['/bin/sh', '-c']
     command:
       - |
@@ -36,7 +36,7 @@ services:
       - mongodb
 
   mongodb:
-    image: 'mongo:8.0'
+    image: 'mongo:9.0'
     volumes:
       - mongodb-data:/data/db
 

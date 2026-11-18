@@ -1,9 +1,9 @@
 plugins {
-	kotlin("jvm") version "2.4.20"
-	kotlin("plugin.spring") version "2.4.20"
-	id("org.springframework.boot") version "4.1.1"
+	kotlin("jvm") version "2.4.21"
+	kotlin("plugin.spring") version "2.4.21"
+	id("org.springframework.boot") version "4.1.2"
 	id("io.spring.dependency-management") version "1.1.7"
-	id("org.openapi.generator") version "7.25.0"
+	id("org.openapi.generator") version "7.27.0"
 }
 
 group = "ch.fasteque"
